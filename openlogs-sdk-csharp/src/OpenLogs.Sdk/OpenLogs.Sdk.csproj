@@ -4,5 +4,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <PackageId>OpenLogs.Sdk</PackageId>
+    <Version>2.2.0</Version>
+    <PackageVersion>2.2.0</PackageVersion>
+    <Description>Core C# SDK for OpenLogs v2 hash-chained records.</Description>
+    <Authors>NextEra.One</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 </Project>

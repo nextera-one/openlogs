@@ -48,9 +48,25 @@ const r1 = createV2Record(
 // Sign the record
 const signed = await signV2Record(r1, { ...keys, kid: "key:main" });
 
-// Verify chain integrity
-const result = await verifyV2Chain([signed]);
-console.log(result); // { ok: true }
+// Verify integrity + signatures + trust/policy layers
+const result = await verifyV2Chain([signed], {
+  requireSignature: true,
+  requireKid: true,
+  requireTrustedKey: true,
+  trustedKeys: [
+    {
+      kid: "key:main",
+      publicKeyHex: signed.sig!.publicKeyHex,
+      actors: ["user:alice"],
+    },
+  ],
+});
+
+console.log(result.ok); // true
+console.log(result.integrity.ok); // true
+console.log(result.signatures); // { ok: true, present: 1, total: 1 }
+console.log(result.trust.trusted); // 1
+console.log(result.policy.mode); // require-signature+require-kid+require-trusted-key
 ```
 
 ## Batch Chain Creation
@@ -76,10 +92,12 @@ registry.addKey({
   kid: "key:prod-2026",
   publicKeyHex: "...",
   activeFrom: "2026-01-01",
+  actors: ["system:audit"],
 });
 
 // Verify a record's signature is valid AND from a trusted key
-const { valid, trusted, kid } = await registry.verifyRecord(signedRecord);
+const { valid, trusted, kid, actorBound, validAtEventTime } =
+  await registry.verifyRecord(signedRecord);
 ```
 
 ## Subpath Exports
@@ -95,14 +113,14 @@ const { valid, trusted, kid } = await registry.verifyRecord(signedRecord);
 
 ### Core Functions
 
-| Function                          | Description                         |
-| --------------------------------- | ----------------------------------- |
-| `createEntry(input)`              | Create a v2 entry (no hash chain)   |
-| `createV2Record(input, prevHash)` | Create a hash-chained v2 record     |
-| `createV2Chain(inputs[])`         | Create a batch of chained records   |
-| `signV2Record(record, keys)`      | Sign a record with Ed25519          |
-| `verifyV2Chain(records[])`        | Verify chain integrity + signatures |
-| `verifyV2RecordSignature(record)` | Verify a single record's signature  |
+| Function                          | Description                                                |
+| --------------------------------- | ---------------------------------------------------------- |
+| `createEntry(input)`              | Create a v2 entry (no hash chain)                          |
+| `createV2Record(input, prevHash)` | Create a hash-chained v2 record                            |
+| `createV2Chain(inputs[])`         | Create a batch of chained records                          |
+| `signV2Record(record, keys)`      | Sign a record with Ed25519                                 |
+| `verifyV2Chain(records, policy?)` | Verify integrity, signatures, trust, semantics, and policy |
+| `verifyV2RecordSignature(record)` | Verify a single record's signature                         |
 
 ### Crypto Functions
 
@@ -115,11 +133,15 @@ const { valid, trusted, kid } = await registry.verifyRecord(signedRecord);
 
 ### TPS Functions
 
-| Function                    | Description                            |
-| --------------------------- | -------------------------------------- |
-| `normalizeTpsUri(input)`    | Normalize a TPS URI string             |
-| `generateTpsUid(tpsString)` | Generate a TPS-UID                     |
-| `decodeTpsUid(uid)`         | Decode a TPS-UID back to TPS + context |
+| Function                    | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| `parseTPS(input)`           | Parse a TPS URI into normalized structured data |
+| `validateTPS(input)`        | Validate TPS syntax and location bounds         |
+| `normalizeTPS(input)`       | Normalize a TPS URI string                      |
+| `normalizeTpsUri(input)`    | Normalize a TPS URI string                      |
+| `compareTPS(a, b)`          | Compare two TPS values for ordering             |
+| `generateTpsUid(tpsString)` | Generate a TPS-UID                              |
+| `decodeTpsUid(uid)`         | Decode a TPS-UID back to TPS + context          |
 
 ### Key Rotation
 
@@ -128,6 +150,81 @@ const { valid, trusted, kid } = await registry.verifyRecord(signedRecord);
 | `KeyRegistry`                 | Class for managing trusted signing keys  |
 | `extractSigningKeys(records)` | Extract unique signing keys from a chain |
 | `groupBySigningKey(records)`  | Group records by their signing key       |
+
+## Verify Result Shape
+
+`verifyV2Chain()` now returns layered results instead of a single boolean:
+
+```ts
+{
+  ok: boolean;
+  records: number;
+  integrity: { ok, error?, index?, details? };
+  signatures: { ok, present, total, error?, index?, details? };
+  trust: {
+    ok,
+    trusted,
+    unresolved,
+    revoked,
+    unsigned,
+    actorBound,
+    validAtEventTime,
+    total,
+    error?,
+    index?,
+    details?
+  };
+  semantics: {
+    ok,
+    validTps,
+    validEvents,
+    validIndexes,
+    validPolicies,
+    total,
+    error?,
+    index?,
+    details?
+  };
+  policy: { ok, mode, error?, index?, details? };
+}
+```
+
+Policy options:
+
+- `requireSignature`
+- `requireKid`
+- `requireTrustedKey`
+- `requireActorBinding`
+- `requireEventPolicy`
+- `requireMonotonicTps`
+- `allowedCalendars`
+- `eventPolicies`
+- `trustedKeys`
+
+Trusted keys can carry activation/revocation windows and actor binding metadata:
+
+```ts
+{
+  kid: "key:prod-2026",
+  publicKeyHex: "...",
+  activeFrom: "tps://node:audit@T:greg.m3.c1.y26.m1.d1.h0.m0.s0.m0",
+  revokedAt: "tps://node:audit@T:greg.m3.c1.y26.m6.d1.h0.m0.s0.m0",
+  actors: ["system:audit"],
+  actorPrefixes: ["system:"],
+}
+```
+
+Event policies let you require semantics for matching event names:
+
+```ts
+{
+  "door.*": {
+    requireLocation: true,
+    allowedActorPrefixes: ["system:"],
+    requiredIndexKeys: ["doorId"],
+  },
+}
+```
 
 ## License
 

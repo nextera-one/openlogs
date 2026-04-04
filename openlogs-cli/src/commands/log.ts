@@ -93,23 +93,42 @@ export const logCommand = new Command("log")
 
     let out = record;
 
-    // Sign if key available
     const wantUnsigned = Boolean(options.unsigned);
-    if (!wantUnsigned) {
+    if (wantUnsigned) {
+      console.warn(
+        chalk.yellow(
+          "WARNING: --unsigned specified; appending a record without cryptographic proof",
+        ),
+      );
+    } else {
+      let id: IdentityFile;
       try {
-        const id = readJsonFile<IdentityFile>(String(options.key));
+        id = readJsonFile<IdentityFile>(String(options.key));
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Signing required but identity file could not be loaded (${options.key}): ${message}. ` +
+            "Run 'openlogs init' first or pass --unsigned explicitly.",
+        );
+      }
+
+      try {
         out = await signV2Record(record, {
           privateKey: hexToBytes(id.privateKeyHex),
           publicKey: hexToBytes(id.publicKeyHex),
           kid: id.kid,
         });
-      } catch {
-        // Keep unsigned if key missing
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to sign record: ${message}`);
       }
     }
 
     appendJsonLine(filePath, out);
     console.log(chalk.green("✅ Logged (OpenLogs v2)"));
+    console.log(
+      `sig:   ${out.sig ? `signed (${out.sig.kid ?? "no-kid"})` : "UNSIGNED"}`,
+    );
     console.log(`id:    ${out.entry.id}`);
     console.log(`event: ${out.entry.event}`);
     console.log(`hash:  ${out.hash}`);

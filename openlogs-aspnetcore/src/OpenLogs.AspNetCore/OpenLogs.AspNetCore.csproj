@@ -4,6 +4,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
+    <PackageId>OpenLogs.AspNetCore</PackageId>
+    <Version>2.2.0</Version>
+    <PackageVersion>2.2.0</PackageVersion>
+    <Description>ASP.NET Core integration for OpenLogs v2 request logging.</Description>
+    <Authors>NextEra.One</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

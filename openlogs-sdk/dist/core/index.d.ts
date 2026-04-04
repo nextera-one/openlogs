@@ -1,5 +1,5 @@
-export { O as OpenLogsAlg, a as OpenLogsPayload, b as OpenLogsRecord, c as OpenLogsSignature, d as OpenLogsV2Entry, e as OpenLogsV2Record, V as VerifyResult } from '../types-CyUveAII.js';
-export { c as computeRecordHash, a as computeV2RecordHash, b as createEntry, d as createPayload, e as createRecord, f as createV2Chain, g as createV2Record, s as signRecord, h as signV2Record, v as verifyChain, i as verifyRecordSignature, j as verifyV2Chain, k as verifyV2RecordSignature } from '../v1-DJ4HHn85.js';
+export { O as OpenLogsAlg, a as OpenLogsEventPolicy, b as OpenLogsPayload, c as OpenLogsRecord, d as OpenLogsSignature, e as OpenLogsTrustedKey, f as OpenLogsV2Entry, g as OpenLogsV2Record, V as VerifyCheckResult, h as VerifyPolicy, i as VerifyPolicyResult, j as VerifyResult, k as VerifySemanticsResult, l as VerifySignatureResult, m as VerifyTrustResult } from '../types-Cp2b7v2J.js';
+export { c as computeRecordHash, a as computeV2RecordHash, b as createEntry, d as createPayload, e as createRecord, f as createV2Chain, g as createV2Record, s as signRecord, h as signV2Record, v as validateRecordPolicy, i as verifyChain, j as verifyRecordSignature, k as verifyV2Chain, l as verifyV2RecordSignature } from '../v1-CJ8KjFaa.js';
 
 declare function canonicalize(value: unknown): string;
 
@@ -14,7 +14,71 @@ declare function generateEd25519Keypair(): Promise<{
 declare function ed25519Sign(message: Uint8Array, privateKey: Uint8Array): Promise<Uint8Array>;
 declare function ed25519Verify(sig: Uint8Array, message: Uint8Array, publicKey: Uint8Array): Promise<boolean>;
 
+type ParsedTpsObject = Record<string, unknown> & {
+    calendar?: string;
+    actor?: string;
+    nodeName?: string;
+    latitude?: number;
+    longitude?: number;
+    building?: string;
+    floor?: string;
+    door?: string;
+    room?: string;
+    placeCountryCode?: string;
+    placeCityCode?: string;
+    millennium?: number;
+    century?: number;
+    year?: number;
+    month?: number;
+    day?: number;
+    hour?: number;
+    minute?: number;
+    second?: number;
+    millisecond?: number;
+    unixSeconds?: number;
+    order?: string;
+};
+interface ParsedTPS {
+    raw: string;
+    normalized: string;
+    calendar: string;
+    actor?: string;
+    nodeName?: string;
+    latitude?: number;
+    longitude?: number;
+    building?: string;
+    floor?: string;
+    door?: string;
+    room?: string;
+    placeCountryCode?: string;
+    placeCityCode?: string;
+    millennium: number;
+    century: number;
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    second: number;
+    millisecond: number;
+    order?: string;
+    parsed: ParsedTpsObject;
+}
+interface TPSValidationResult {
+    valid: boolean;
+    normalized?: string;
+    parsed?: ParsedTPS;
+    errors: string[];
+}
 declare function normalizeTpsUri(input: string): string;
+declare function normalizeTPS(input: string): string;
+declare function parseTPS(input: string): ParsedTPS;
+declare function validateTPS(input: string): TPSValidationResult;
+declare function compareTPS(left: string, right: string): number;
+declare function extractTPSActor(input: string): string | undefined;
+declare function hasTPSLocation(input: string): boolean;
+declare function hasTPSNode(input: string): boolean;
+declare function compareTemporalValues(left: string, right: string): number;
 
 /**
  * Generate a TPS-UID for OpenLogs entries.
@@ -36,4 +100,4 @@ declare function decodeTpsUid(uid: string): {
     context?: string;
 };
 
-export { canonicalize, decodeTpsUid, ed25519Sign, ed25519Verify, generateEd25519Keypair, generateTpsUid, hexToBytes, normalizeTpsUri, randomBytes, sha256Hex, utf8ToBytes };
+export { type ParsedTPS, type TPSValidationResult, canonicalize, compareTPS, compareTemporalValues, decodeTpsUid, ed25519Sign, ed25519Verify, extractTPSActor, generateEd25519Keypair, generateTpsUid, hasTPSLocation, hasTPSNode, hexToBytes, normalizeTPS, normalizeTpsUri, parseTPS, randomBytes, sha256Hex, utf8ToBytes, validateTPS };

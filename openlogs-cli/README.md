@@ -58,11 +58,47 @@ Verify hash chain integrity and signatures of an OpenLogs JSONL file.
 ```bash
 openlogs verify
 openlogs verify --file ./audit.jsonl
+openlogs verify --trust ./trust.json --require-trusted-key
+openlogs verify --policy ./verify-policy.json
 ```
 
 **Options:**
 
 - `-f, --file <path>` — Input JSONL file (default: `./openlogs.jsonl`)
+- `--policy <path>` — Load a JSON verification policy document
+- `--require-signature` / `--require-signatures` — Fail if any record is unsigned
+- `--require-kid` — Fail if any signature is missing a key id
+- `--require-trusted-key` — Fail if any signature is not backed by the trusted key registry
+- `--require-actor-binding` — Fail if a trusted key is not authorized for the record actor
+- `--require-event-policy` — Fail if no event policy matches a record event
+- `--trust <path>` / `--trusted-keys <path>` — Load trusted keys from JSON
+- `--allow-calendar <calendar>` — Restrict verification to specific TPS calendars
+- `--require-monotonic-tps` — Fail if TPS order regresses across the chain
+
+Example policy document shape:
+
+```json
+{
+  "requireSignature": true,
+  "requireTrustedKey": true,
+  "requireActorBinding": true,
+  "allowedCalendars": ["greg"],
+  "trustedKeys": [
+    {
+      "kid": "key:prod-main",
+      "publicKeyHex": "...",
+      "actors": ["system:api"],
+      "activeFrom": "tps://node:api@T:greg.m3.c1.y26.m1.d1.h0.m0.s0.m0"
+    }
+  ],
+  "eventPolicies": {
+    "http.request.*": {
+      "requireNode": true,
+      "allowedActorPrefixes": ["system:"]
+    }
+  }
+}
+```
 
 ---
 

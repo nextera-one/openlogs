@@ -12,7 +12,7 @@ Core Python SDK for OpenLogs v2 style hash-chained records.
 ## Install
 
 ```bash
-pip install -e .
+pip install openlogs-sdk-python
 ```
 
 ## Quick Example

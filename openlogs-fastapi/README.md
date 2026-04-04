@@ -11,8 +11,7 @@ FastAPI integration for OpenLogs, modeled after the NestJS package behavior.
 ## Install
 
 ```bash
-pip install -e ../openlogs-sdk-python
-pip install -e .
+pip install openlogs-sdk-python openlogs-fastapi
 ```
 
 ## Quick Use

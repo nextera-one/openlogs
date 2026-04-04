@@ -26,7 +26,8 @@ export class OpenLogsInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap({
         next: () => this.logRequest(context, tpsDate, startTime, null),
-        error: (error) => this.logRequest(context, tpsDate, startTime, error),
+        error: (error: unknown) =>
+          this.logRequest(context, tpsDate, startTime, error),
       }),
     );
   }
@@ -35,7 +36,7 @@ export class OpenLogsInterceptor implements NestInterceptor {
     context: ExecutionContext,
     date: Date,
     startTime: number,
-    error: Error | null,
+    error: unknown,
   ) {
     if (context.getType() !== "http") {
       return; // currently only handles HTTP
@@ -53,10 +54,12 @@ export class OpenLogsInterceptor implements NestInterceptor {
     const actor = this.options.actor || `client:${this.getClientIp(req)}`;
 
     // 3. Determine Event Name
-    const event = error ? "http.request.failed" : "http.request.success";
+    const hasError = error !== null && typeof error !== "undefined";
+    const event = hasError ? "http.request.failed" : "http.request.success";
 
     // 4. Build Data Payload
-    const statusCode = error ? (error as any).status || 500 : res.statusCode;
+    const statusCode = getStatusCode(error, res.statusCode);
+    const errorMessage = getErrorMessage(error);
 
     const data = {
       method: req.method,
@@ -64,7 +67,7 @@ export class OpenLogsInterceptor implements NestInterceptor {
       statusCode,
       durationMs,
       userAgent: req.headers["user-agent"] || "unknown",
-      ...(error && { error: error.message }),
+      ...(errorMessage && { error: errorMessage }),
     };
 
     // 5. Build Indexes
@@ -150,4 +153,23 @@ export class OpenLogsInterceptor implements NestInterceptor {
     }
     return req.socket?.remoteAddress || "unknown";
   }
+}
+
+function getStatusCode(error: unknown, fallbackStatusCode: number): number {
+  if (
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    typeof error.status === "number"
+  ) {
+    return error.status;
+  }
+
+  return error ? 500 : fallbackStatusCode;
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (!error) return undefined;
+  if (error instanceof Error) return error.message;
+  return String(error);
 }

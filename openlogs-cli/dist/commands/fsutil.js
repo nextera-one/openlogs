@@ -54,8 +54,8 @@ function writeJsonFile(filePath, value) {
 }
 function readJsonLines(filePath) {
     const raw = fs.readFileSync(path.resolve(filePath), 'utf8');
-    const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
-    return lines.map((l) => JSON.parse(l));
+    const lines = raw.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    return lines.map((line) => JSON.parse(line));
 }
 function appendJsonLine(filePath, value) {
     ensureDirForFile(filePath);

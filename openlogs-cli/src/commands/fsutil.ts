@@ -22,8 +22,8 @@ export function writeJsonFile(filePath: string, value: unknown): void {
 
 export function readJsonLines(filePath: string): any[] {
   const raw = fs.readFileSync(path.resolve(filePath), 'utf8');
-  const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  return lines.map((l) => JSON.parse(l));
+  const lines = raw.split(/\r?\n/).filter((line: string) => line.trim().length > 0);
+  return lines.map((line: string) => JSON.parse(line));
 }
 
 export function appendJsonLine(filePath: string, value: unknown): void {

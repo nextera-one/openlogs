@@ -21,6 +21,21 @@ export function sha256Hex(data: Uint8Array | string): string {
   return bytesToHex(sha256(bytes));
 }
 
+type NodeCryptoModule = {
+  randomBytes(length: number): Uint8Array;
+};
+
+function loadNodeCrypto(): NodeCryptoModule | null {
+  try {
+    const nodeRequire = Function(
+      "return typeof require === 'function' ? require : undefined;",
+    )() as ((specifier: string) => NodeCryptoModule) | undefined;
+    return nodeRequire ? nodeRequire("node:crypto") : null;
+  } catch {
+    return null;
+  }
+}
+
 export function randomBytes(length: number): Uint8Array {
   if (typeof globalThis.crypto?.getRandomValues === "function") {
     const out = new Uint8Array(length);
@@ -28,17 +43,15 @@ export function randomBytes(length: number): Uint8Array {
     return out;
   }
 
-  // Fallback for older Node.js versions (< 19) using dynamic import-friendly approach
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const nodeCrypto = require("crypto") as typeof import("crypto");
+  const nodeCrypto = loadNodeCrypto();
+  if (nodeCrypto) {
     return new Uint8Array(nodeCrypto.randomBytes(length));
-  } catch {
-    throw new Error(
-      "No cryptographic random source available. " +
-        "Use Node.js >= 19 or a browser with Web Crypto API.",
-    );
   }
+
+  throw new Error(
+    "No cryptographic random source available. " +
+      "Use Node.js >= 19 or a browser with Web Crypto API.",
+  );
 }
 
 export async function generateEd25519Keypair(): Promise<{

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openlogs-sdk-python"
-version = "1.0.0"
+version = "2.2.0"
 description = "Core Python SDK for OpenLogs v2 hash-chained records"
 readme = "README.md"
 requires-python = ">=3.11"

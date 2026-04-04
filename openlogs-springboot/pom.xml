@@ -5,13 +5,13 @@
   <parent>
     <groupId>com.nextera.one</groupId>
     <artifactId>openlogs-java-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.2.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>com.nextera.one</groupId>
   <artifactId>openlogs-springboot</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>2.2.0</version>
   <name>openlogs-springboot</name>
   <description>Spring Boot integration for OpenLogs v2</description>
 

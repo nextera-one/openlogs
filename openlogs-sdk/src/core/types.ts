@@ -49,10 +49,85 @@ export interface OpenLogsV2Record {
   sig?: OpenLogsSignature;
 }
 
-export interface VerifyResult {
+export interface OpenLogsTrustedKey {
+  kid?: string;
+  publicKeyHex: string;
+  activeFrom?: string;
+  revokedAt?: string;
+  actors?: string[];
+  actorPrefixes?: string[];
+  issuer?: string;
+  revokedReason?: string;
+  revocationScope?: string;
+  description?: string;
+}
+
+export interface OpenLogsEventPolicy {
+  requireLocation?: boolean;
+  requireNode?: boolean;
+  requireActorInTps?: boolean;
+  allowedCalendars?: string[];
+  allowedActorPrefixes?: string[];
+  requiredIndexKeys?: string[];
+  description?: string;
+}
+
+export interface VerifyCheckResult {
   ok: boolean;
   error?: string;
   index?: number;
+  details?: string;
+}
+
+export interface VerifySignatureResult extends VerifyCheckResult {
+  present: number;
+  total: number;
+}
+
+export interface VerifyTrustResult extends VerifyCheckResult {
+  trusted: number;
+  unresolved: number;
+  revoked: number;
+  unsigned: number;
+  actorBound: number;
+  validAtEventTime: number;
+  total: number;
+}
+
+export interface VerifySemanticsResult extends VerifyCheckResult {
+  validTps: number;
+  validEvents: number;
+  validIndexes: number;
+  validPolicies: number;
+  total: number;
+}
+
+export interface VerifyPolicyResult extends VerifyCheckResult {
+  mode: string;
+}
+
+export interface VerifyPolicy {
+  requireSignature?: boolean;
+  requireKid?: boolean;
+  requireTrustedKey?: boolean;
+  requireMonotonicTps?: boolean;
+  requireActorBinding?: boolean;
+  requireEventPolicy?: boolean;
+  allowedCalendars?: string[];
+  eventPolicies?: Record<string, OpenLogsEventPolicy>;
+  trustedKeys?: OpenLogsTrustedKey[];
+}
+
+export interface VerifyResult {
+  ok: boolean;
+  records: number;
+  error?: string;
+  index?: number;
+  integrity: VerifyCheckResult;
+  signatures: VerifySignatureResult;
+  trust: VerifyTrustResult;
+  semantics: VerifySemanticsResult;
+  policy: VerifyPolicyResult;
 }
 
 // =============================================================================
